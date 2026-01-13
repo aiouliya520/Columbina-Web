@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Columbina | 空月归乡</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Noto+Serif+SC:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'moon-base': 'rgb(22,30,64)',
+                        'moon-dark': '#0B0E16',
+                        'moon-light': '#e0f2fe',
+                        'moon-glow': 'rgba(224, 242, 254, 0.6)',
+                        'vision-red': '#be123c',
+                    },
+                    fontFamily: {
+                        'cinzel': ['"Cinzel Decorative"', 'serif'],
+                        'cormorant': ['"Cormorant Garamond"', 'serif'],
+                        'noto': ['"Noto Serif SC"', 'serif'], 
+                    },
+                    backgroundImage: {
+                        'holy-gradient': 'linear-gradient(135deg, rgba(22,33,79,0.95) 0%, rgba(11,14,22,0.98) 100%)',
+                    },
+                    dropShadow: {
+                        'glow': '0 0 15px rgba(224, 242, 254, 0.5)',
+                        'text-glow': '0 0 8px rgba(255, 255, 255, 0.6)',
+                        'holy-glow': '0 0 30px rgba(224, 242, 254, 0.8)',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 7s ease-in-out infinite',
+                        'breathe': 'breathe 8s ease-in-out infinite alternate',
+                        'shimmer-glow': 'shimmerGlow 4s ease-in-out infinite alternate',
+                        'halo-pulse': 'haloPulse 4s ease-in-out infinite alternate',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        breathe: {
+                            '0%': { transform: 'scale(1)', filter: 'brightness(1)' },
+                            '100%': { transform: 'scale(1.05)', filter: 'brightness(1.1)' },
+                        },
+                        shimmerGlow: {
+                            '0%': { filter: 'brightness(1) drop-shadow(0 0 10px rgba(224,242,254,0.2))' },
+                            '100%': { filter: 'brightness(1.3) drop-shadow(0 0 25px rgba(224,242,254,0.6))' }
+                        },
+                        haloPulse: {
+                            '0%': { filter: 'drop-shadow(0 0 5px rgba(246, 213, 242, 0.3))' },
+                            '100%': { filter: 'drop-shadow(0 0 22px rgba(246, 213, 242, 0.7))' }
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- 全局 --- */
+        body {
+            background-color: rgb(22, 33, 79);
+            color: #e0f2fe;
+            overflow-x: hidden;
+            cursor: none !important; 
+        }
+        * { cursor: none !important; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0B0E16; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 2px; }
+
+        /* --- 1. 光标系统 --- */
+        #custom-cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 90px;
+            height: 90px;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%); 
+            filter: drop-shadow(0 0 15px rgba(224, 242, 254, 0.9));
+            transition: transform 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67), filter 0.2s ease;
+        }
+        #custom-cursor img {
+            width: 100%; height: 100%; object-fit: contain;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        #custom-cursor.clicking {
+            transform: translate(-50%, -50%) scale(0.9);
+            filter: drop-shadow(0 0 20px rgba(255, 105, 180, 0.453));
+        }
+        #custom-cursor.clicking img {
+            transform: rotate(-10deg);
+        }
+        
+        #custom-cursor.active img { transform: scale(1.2) rotate(10deg); }
+
+        .cursor-trail-star {
+            position: fixed;
+            font-size: 11px;
+            color: rgba(217, 237, 255, 0.947);
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            animation: starFade 2.0s ease-out forwards;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        .trail-pink { color: #f6d5f2; text-shadow: 0 0 8px #f6d5f2; }
+
+        @keyframes starFade {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+        }
+
+        .ripple-ring {
+            position: fixed;
+            border: 1px solid rgba(255, 255, 255, 0.315);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            animation: rippleAnim 2.5s cubic-bezier(0.1, 0.5, 0.1, 1) forwards;
+        }
+        @keyframes rippleAnim {
+            0% { width: 0; height: 0; opacity: 0.5; border-width: 1.5px; }
+            100% { width: 140px; height: 140px; opacity: 0; border-width: 0; }
+        }
+
+        .feather-particle {
+            position: fixed;
+            width: 16px; height: 16px;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            animation: featherFloat 1.2s ease-out forwards;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='white'%3E%3Cpath d='M461.6 19.3c-2.3-1.6-26.6-17.6-67.6-11.7-41.9 6.1-81.6 37.9-115.8 77.2-24.9 28.5-47.5 61.2-66.2 92.5-12.7 21.3-23.7 42.1-33.1 61.5l1.6 1.7c47.5-18.1 94-27.1 138.8-27.1 11.2 0 22.3.6 33.2 1.7 5.7.6 11.2-3.1 12.8-8.7 1.6-5.6-1.6-11.6-7.1-13.6-69.5-25.7-101.4-85.9-106.8-97.1-2.9-6-11.1-6.8-15.1-1.4-23.6 31.8-54.8 63.8-89.9 95.3C66.3 272.2 25.1 298.5 6.7 308.3c-5.7 3-8.8 9.1-7.4 15.3 1.3 6.2 6.6 10.6 12.9 10.6 2.3 0 4.6-.6 6.7-1.7 7.5-3.9 44.5-22.6 100-60.6 17.6-12 34.6-25.1 50.8-38.9-6.4 17.5-11.9 33.6-16.3 47.9l-1.9 6.3c-15.3 50.1-40.2 110.8-40.2 110.8-2.6 6.3.3 13.5 6.6 16.1 6.2 2.6 13.5-.3 16.1-6.6 0 0 20.3-49.4 35.8-91.8 3.5-9.6 6.9-19.1 10.1-28.5 28.3-4.5 54.4-12.2 77.5-22.9 51.1-23.6 86.8-59.5 106.2-106.6 20.5-49.7 13.8-95.7 12.2-105.8-1.5-9.2-6.6-17.1-14.2-22.2z'/%3E%3C/svg%3E");
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+        }
+        @keyframes featherFloat {
+            0% { opacity: 1; transform: translate(0,0) scale(0.5) rotate(0deg); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); }
+        }
+
+        /* --- 2. 版块过渡 --- */
+        .section-mask {
+            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+        }
+        .hero-img, .hero-anim, .bg-breathing { will-change: transform, opacity; }
+        
+        .bg-breathing {
+            animation: breatheBg 12s ease-in-out infinite alternate;
+            transform-origin: center center;
+        }
+        @keyframes breatheBg {
+            0% { transform: scale(1); filter: brightness(0.9); }
+            100% { transform: scale(1.08); filter: brightness(1.1); }
+        }
+        
+        .blur-bg { filter: blur(3px); }
+
+        /* --- 3. 玻璃面板 & 卡片 --- */
+        .glass-panel {
+            background: rgba(22, 33, 79, 0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(224, 242, 254, 0.1);
+            box-shadow: 0 0 30px rgba(224, 242, 254, 0.05), inset 0 0 20px rgba(255,255,255,0.02);
+            transition: all 0.5s ease;
+        }
+        .glass-panel:hover {
+            border-color: rgba(224, 242, 254, 0.3);
+            box-shadow: 0 0 40px rgba(224, 242, 254, 0.15);
+        }
+        
+        .profile-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 600px;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-15px) scale(1.03); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(224,242,254,0.3);
+            border-color: rgba(224, 242, 254, 0.8);
+            z-index: 10;
+        }
+
+        .quote-box {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            color: #bad4ffe0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            text-shadow: 0 0 5px rgba(244, 206, 240, 0.227);
+        }        
+
+        /* --- 4. 播放器 --- */
+        #lyrics-container {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            overflow-y: auto; 
+            height: 100%;
+            padding-left: 20px; 
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+            position: relative;
+            pointer-events: auto;
+        }
+        #lyrics-container::-webkit-scrollbar { display: none; }
+
+        .lyric-item {
+            opacity: 0.4;
+            transition: all 0.4s ease-out;
+            transform: scale(0.95);
+            transform-origin: left center;
+            cursor: pointer; 
+            margin-bottom: 1.5rem;
+            padding: 6px 0;
+            min-height: 28px;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
+        .lyric-item:hover { 
+            opacity: 0.9; 
+            color: #fff; 
+            transform: translateX(10px) scale(1.02); 
+            text-shadow: 0 0 8px rgba(255,255,255,0.8);
+        }
+        .lyric-active {
+            opacity: 1;
+            color: #fff;
+            transform: scale(1.15) translateX(15px);
+            text-shadow: 0 0 25px rgba(224, 242, 254, 1);
+            font-weight: bold;
+        }
+
+        .spin { animation: spin 20s linear infinite; }
+        .spin-paused { animation-play-state: paused; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        #mini-player {
+            left: 50%;
+            transform: translate(-50%, 150%);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #mini-player.visible { transform: translate(-50%, 0); }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1); 
+            height: 4px; 
+            border-radius: 2px;
+            cursor: pointer;
+            background-image: linear-gradient(#e0f2fe, #e0f2fe);
+            background-size: 0% 100%;
+            background-repeat: no-repeat;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px; width: 12px;
+            border-radius: 50%;
+            background: #e0f2fe;
+            margin-top: -4px; 
+            box-shadow: 0 0 10px rgba(224, 242, 254, 0.8);
+            transition: transform 0.1s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
+        input[type=range]::-webkit-slider-runnable-track { -webkit-appearance: none; box-shadow: none; border: none; background: transparent; }
+
+        /* --- 5. 画廊特效 --- */
+        .gallery-card-3d {
+            position: absolute;
+            width: 320px; height: 480px;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s, z-index 0s;
+            will-change: transform;
+        }
+        .anim-float-wrapper {
+            width: 100%; height: 100%;
+            animation: cardFloatInfinite 6s ease-in-out infinite;
+        }
+        @keyframes cardFloatInfinite {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .anim-flash-wrapper {
+            width: 100%; height: 100%;
+            animation: cardFlashInfinite 2.8s ease-in-out infinite alternate;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        @keyframes cardFlashInfinite {
+            0% { filter: brightness(0.75) drop-shadow(0 0 0 rgba(224,242,254,0)); }
+            100% { filter: brightness(1.05) drop-shadow(0 0 20px rgba(211, 230, 254, 0.827)); }
+        }
+        .img-cover { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- 导航栏 --- */
+        .nav-wrapper {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 50;
+            width: 60px;
+        }
+        .nav-line {
+            position: absolute;
+            left: 50%; 
+            transform: translateX(-50%);
+            top: 10px; bottom: 10px;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent);
+            z-index: 0;
+        }
+        .nav-item {
+            position: relative;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 100%;
+        }
+        .moon-phase {
+            width: 50px; 
+            height: 50px; 
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+        .moon-phase svg {
+            width: 100%; height: 100%;
+            display: block;
+            overflow: visible;
+        }
+        .nav-item:hover .moon-phase { transform: scale(1.2); }
+        .nav-text {
+            position: absolute;
+            right: 70px;
+            text-align: right;
+            opacity: 0;
+            transition: all 0.3s;
+            transform: translateX(10px);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .nav-item:hover .nav-text { opacity: 1; transform: translateX(0); }
+
+        .loop-icon-container {
+            position: relative;
+            width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .loop-num-badge {
+            position: absolute;
+            font-size: 8px; font-weight: 900;
+            color: #fff; background-color: #0B0E16;
+            padding: 0 1px; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); line-height: 1;
+        }
+        
+        .halo-breath { animation: haloPulse 4s ease-in-out infinite alternate; }
+        .text-halo-pink {
+            filter: drop-shadow(0 0 3px rgba(255, 170, 245, 0.63));
+            animation: haloPulse 2s infinite alternate;
+        }
+        .text-halo-blue {
+            filter: drop-shadow(0 0 16px rgba(192, 222, 251, 0.745));
+        }
+        .columbina-gradient {
+            background: linear-gradient(to right, #ffffffc1, #d0ecff, #d6f5f8f7,  rgba(249, 221, 246, 0.789), rgba(255, 255, 255, 0.268));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }        
+
+    </style>
+</head>
+<body class="font-noto selection:bg-moon-light selection:text-moon-base">
+
+    <div id="custom-cursor">
+        <img id="cursor-img" src="./素材图/Q版1.png" alt="cursor">
+    </div>
+
+    <div class="fixed inset-0 -z-50 bg-moon-base"></div>
+    <canvas id="particleCanvas" class="fixed inset-0 z-[1] pointer-events-none opacity-80 mix-blend-screen"></canvas>
+
+    <button onclick="scrollToId('hero')" class="fixed top-8 left-8 z-50 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-moon-light interactive-el hover:scale-110 transition-transform">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    <button onclick="toggleMute()" id="mute-btn" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-moon-light interactive-el hover:scale-110 transition-transform">
+        <i class="fa-solid fa-volume-high"></i>
+    </button>
+    
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+        <defs>
+            <filter id="holy-aura" x="-200%" y="-200%" width="500%" height="500%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="blur"/>
+                <feFlood flood-color="#a5f3fc" flood-opacity="0.8" result="color"/>
+                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+                <feMerge>
+                    <feMergeNode in="glow"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+
+    <div class="nav-wrapper hidden md:block">
+        <div class="nav-line"></div>
+        <div class="flex flex-col items-center">
+            <a href="#hero" class="nav-item group interactive-el">
+                <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">降临</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">The Descent</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                        <defs><mask id="moon-mask-1"><rect x="0" y="0" width="64" height="64" fill="white" /><circle cx="33.5" cy="32.8" r="12.6" fill="black" /></mask></defs>
+                        <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.5" filter="url(#holy-aura)" />
+                        <circle cx="32" cy="32" r="14" fill="rgb(19,25,58)" />
+                        <circle cx="32" cy="32" r="14" fill="#e0f2fe" mask="url(#moon-mask-1)" />
+                    </svg>
+                </div>
+            </a>
+            <a href="#profile" class="nav-item group interactive-el">
+                 <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">神格</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">Divinity</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                        <defs><mask id="moon-mask-2"><rect x="0" y="0" width="64" height="64" fill="white" /><circle cx="34.6" cy="33.1" r="11" fill="black" /></mask></defs>
+                        <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.5" filter="url(#holy-aura)" />
+                        <circle cx="32" cy="32" r="14" fill="rgb(19,25,58)" />
+                        <circle cx="32" cy="32" r="14" fill="#e0f2fe" mask="url(#moon-mask-2)" />
+                    </svg>
+                </div>
+            </a>
+            <a href="#lore" class="nav-item group interactive-el">
+                 <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">乡愁</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">Homesickness</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                        <defs><mask id="moon-mask-3"><rect x="0" y="0" width="64" height="64" fill="white" /><circle cx="35.7" cy="33.3" r="10.2" fill="black" /></mask></defs>
+                        <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.5" filter="url(#holy-aura)" />
+                        <circle cx="32" cy="32" r="14" fill="rgb(19,25,58)" />
+                        <circle cx="32" cy="32" r="14" fill="#e0f2fe" mask="url(#moon-mask-3)" />
+                    </svg>
+                </div>
+            </a>
+            <a href="#gallery" class="nav-item group interactive-el">
+                 <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">圣相</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">Gallery</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                        <defs><mask id="moon-mask-4"><rect x="0" y="0" width="64" height="64" fill="white" /><circle cx="37" cy="33.6" r="8.8" fill="black" /></mask></defs>
+                        <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.5" filter="url(#holy-aura)" />
+                        <circle cx="32" cy="32" r="14" fill="rgb(19,25,58)" />
+                        <circle cx="32" cy="32" r="14" fill="#e0f2fe" mask="url(#moon-mask-4)" />
+                    </svg>
+                </div>
+            </a>
+            <a href="#oracle" class="nav-item group interactive-el">
+                 <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">神谕</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">Oracle</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                        <defs><mask id="moon-mask-5"><rect x="0" y="0" width="64" height="64" fill="white" /><circle cx="38.3" cy="34.5" r="7.4" fill="black" /></mask></defs>
+                        <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.5" filter="url(#holy-aura)" />
+                        <circle cx="32" cy="32" r="14" fill="rgb(19,25,58)" />
+                        <circle cx="32" cy="32" r="14" fill="#e0f2fe" mask="url(#moon-mask-5)" />
+                    </svg>
+                </div>
+            </a>
+            <a href="#music" class="nav-item group interactive-el">
+                 <div class="nav-text">
+                    <div class="text-sm font-bold text-white text-holy">咏唱</div>
+                    <div class="text-[10px] font-cinzel text-moon-light">lullaby</div>
+                </div>
+                <div class="moon-phase">
+                    <svg viewBox="0 0 64 64">
+                         <circle cx="32" cy="32" r="16" fill="#a5f3fc" opacity="0.6" filter="url(#holy-aura)" />
+                         <circle cx="32" cy="32" r="14" fill="#e0f2fe" />
+                    </svg>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <section id="hero" class="relative w-full h-screen overflow-hidden flex items-center justify-center z-10 section-mask">
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <img src="./素材图/立绘（横版）.jpg" 
+                 class="w-full h-full object-cover opacity-30 blur-bg bg-breathing"
+                 onerror="this.src='https://via.placeholder.com/1920x1080?text=Background'">
+            <div class="absolute inset-0 bg-gradient-to-t from-moon-base via-moon-base/40 to-moon-base/20"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center h-full">
+            <div class="md:w-1/2 space-y-8 text-center md:text-left pt-20 pl-4 z-20">
+                <div class="hero-anim opacity-0 inline-block px-4 py-1 border border-moon-light/30 rounded-full bg-moon-base/50 backdrop-blur-sm animate-float">
+                    <span class="text-xs font-cinzel tracking-[0.3em] text-moon-light">Welkin Moon's Homecoming</span>
+                </div>
+                <div class="title-container" style="padding-right: 2rem; overflow: visible; display: inline-block;">
+                    <h1 class="hero-anim opacity-20 text-6xl md:text-8xl font-cinzel font-bold columbina-gradient animate-float leading-tight text-halo-blue" style="animation-delay: 0.2s;">
+                        COLUMBINA
+                    </h1>
+                </div>
+                <h2 class="hero-anim opacity-0 text-3xl md:text-4xl font-noto font-black tracking-widest text-white animate-float text-halo-pink" style="animation-delay: 0.4s; text-shadow: 0 0 7px rgba(255, 255, 255, 0.529);">
+                    哥伦比娅 · 希珀塞莱尼娅
+                </h2>
+                <p class="hero-anim opacity-0 text-2xl md:text-3xl font-cormorant italic text-gray-200 leading-relaxed text-holy mt-8 border-l-2 border-moon-light/30 pl-6 animate-float" style="animation-delay: 0.6s;">
+                    “月下白鸽，<br>何以为家？”
+                </p>
+                <div class="hero-anim opacity-0 pt-8 animate-float" style="animation-delay: 0.8s;">
+                    <button onclick="scrollToId('oracle')" class="interactive-el px-10 py-3 rounded-full border border-moon-light/50 hover:bg-moon-light hover:text-moon-base transition-all duration-500 font-cinzel font-bold tracking-widest shadow-glow">
+                        Enter the Dream
+                    </button>
+                </div>
+            </div>
+            <div class="md:w-1/2 h-full flex items-end justify-center md:justify-end relative pointer-events-none z-10">
+                <img src="./素材图/免抠图_少女的背影.png" 
+                     class="hero-img opacity-0 max-h-[75vh] object-contain halo-breath animate-halo-pulse"
+                     style="margin-right: -5%; animation: float 7s ease-in-out infinite, haloPulse 3s ease-in-out infinite alternate;" 
+                     onerror="this.style.opacity='0'">
+            </div>
+        </div>
+    </section>
+
+     <section id="profile" class="relative py-32 z-10 section-mask">
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <img src="./素材图/bg6.jpg" class="w-full h-full object-cover opacity-50 blur-[2px] bg-breathing">
+            <div class="absolute inset-0 bg-gradient-to-t from-moon-base via-moon-base/50 to-moon-base/30"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center mb-20 scroll-reveal">
+                <div class="inline-flex items-center justify-center relative">
+                    <img src="./图标/ui4.png" class="absolute -left-16 top-1/2 -translate-y-1/2 w-11 h-11 object-contain drop-shadow-glow  animate-float " style="margin-top: -1.25rem; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.899));">
+                    <h2 class="text-4xl font-noto font-black text-white text-holy animate-float tracking-widest" style="text-shadow: 0 0 30px rgba(255,255,255,0.6);">
+                        霜月之相
+                    </h2>
+                </div>
+                <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-moon-light to-transparent mx-auto mt-4"></div>
+                <h2 class="text-xs font-cinzel text-moon-light tracking-[0.3em] mt-2">Divinity of the New Moon</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="glass-panel p-8 rounded-2xl relative overflow-hidden group profile-card interactive-el profile-card-anim opacity-0 translate-y-10 animate-float-delayed">
+                    <div class="flex items-center mb-2">
+                        <img src="./图标/ui7.png" class="w-10 h-10 object-contain mr-3  drop-shadow-glow">
+                        <h3 class="text-2xl font-bold text-moon-light m-0">前愚人众第三席</h3>
+                    </div>
+                    <p class="text-sm font-cormorant text-gray-400 italic mb-6">"Damselette"</p>
+                    <img src="./素材图/art6.png" class="w-full h-48 object-cover rounded-lg opacity-90 group-hover:scale-105 transition-transform duration-700">
+                    <p class="mt-6 text-gray-300 text-sm leading-relaxed">
+                        曾任至冬国外交使团愚人众十一执行官第三席，代号“少女” 。
+                        <br>她曾以为找到了新家，却发现这里不过是另一个觊觎月神力量的地方。在耗费大量力量履行了对女皇的某个承诺后，她再次选择了离开，回到了希汐岛的银月之庭。
+                        <br><br>在愚人众，她结识了最初的几位同伴。
+                    </p>
+                    <div class="quote-box">
+                        「冬夜不会仁慈。她在霜雪中抛弃了帷巢，没人应当为她覆补这份缺失。」
+                        <br><br>—— 安娜丝塔夏·费奥多罗夫娜·雪奈茨娜娅
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl relative overflow-hidden group border-moon-light/40 shadow-glow profile-card interactive-el profile-card-anim opacity-0 translate-y-10 animate-float-delayed" style="animation-delay: 1s;">
+                    <div class="text-center mb-2">
+                        <img src="./图标/ui1.png" class="inline-block w-14 h-14 object-contain drop-shadow-glow animate-pulse">
+                    </div>
+                    <h3 class="text-2xl font-bold text-center text-white mb-2">库塔尔 (Kutal)</h3>
+                    <p class="text-sm text-center font-cormorant text-gray-400 italic mb-6">Goddess of the Frost Moon</p>
+                    <img src="./素材图/art5.jpg" class="w-full h-32 object-cover rounded-lg opacity-80 mb-4 mx-auto group-hover:scale-105 transition-transform">
+                    <p class="text-gray-300 text-sm leading-relaxed text-sm">
+                        <br>哥伦比娅是“霜月”的女神。五百年前，她诞生于挪德卡莱的希汐岛，被黄金国的遗胤霜月之子尊为预言中的新神“库塔尔”。
+                        <br><br>对哥伦比娅来说，这颗星球不是一个好的母亲。她给了哥伦比娅一个足够特殊的身份，将自己诞下，但这仿佛已将她的爱全部耗尽了。往后的日子里，母亲以冰冷的沉默拒绝了伸出双臂的自己。
+                    </p>
+                     <div class="quote-box">
+                        「希望有朝一日，库塔尔与霜月之子，明月与仰望明月的人，能够在同一片天空下共饮。」
+                        <br><br>—— 菈乌玛
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl relative overflow-hidden group profile-card interactive-el profile-card-anim opacity-0 translate-y-10 animate-float-delayed" style="animation-delay: 2s;">
+                    <div class="flex items-center mb-2">
+                        <img src="./图标/ui2.png" class="w-10 h-10 object-contain mr-3 drop-shadow-glow ">
+                        <h3 class="text-2xl font-bold text-moon-light m-0">月之少女</h3>
+                    </div>
+                    <p class="text-sm font-cormorant text-gray-400 italic mb-6">Moon Maiden</p>
+                    <img src="./素材图/pv5.png" class="w-full h-48 object-cover rounded-lg opacity-90 group-hover:scale-105 transition-transform duration-700">
+                    <p class="mt-6 text-gray-300 text-sm leading-relaxed">
+                        深姜红色挑染的黑发少女，佩戴六翼羽饰与白色网格状面纱。
+                        <br><br>穿戴白蓝相间的月神服饰，赤脚，手腕和腿部缠有白色蝴蝶结丝绸作为装饰，脚底附有水珠和月牙形态的高跟底座，常以闭眼姿态示人。
+                    </p>
+                    <div class="quote-box">
+                        「虽然表面上对什么都不关心，但她还是救了很多人呢，比如我。」
+                        <br>「不过没想到&ensp;‘哥伦比娅&ensp;’居然不是她的名字，我明明觉得这名字很适合她呢，有种轻飘飘，又很美的感觉？」
+                        <br><br>—— 雅珂达
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="lore" class="relative py-32 z-10 overflow-hidden section-mask">
+        <div class="absolute inset-0 opacity-20 -z-10 overflow-hidden">
+            <img src="./素材图/bg6.jpg" class="w-full h-full object-cover blur-sm bg-breathing">
+        </div>
+
+        <div class="container mx-auto px-6 space-y-40">
+            <div class="flex flex-col md:flex-row items-center gap-12 lore-item">
+                <div class="md:w-1/2 interactive-el group perspective-1000">
+                    <div class="tilt-wrap transition-transform duration-200 ease-out">
+                        <img src="./素材图/art1.jpg" class="rounded-lg shadow-2xl w-full object-cover h-[400px] grayscale group-hover:grayscale-0 transition-all duration-700" onerror="this.src='https://via.placeholder.com/600x400?text=CG1'">
+                    </div>
+                </div>
+                <div class="md:w-1/2 text-left space-y-2">
+                    <div class="text-6xl text-white/5 font-cinzel select-none scroll-reveal leading-none">ORIGIN</div>
+                    <h3 class="text-3xl font-bold text-moon-light text-holy font-noto scroll-reveal">霜月的诞生</h3>
+                    <p class="text-lg text-gray-300 font-cormorant leading-loose lore-text scroll-reveal pt-4">
+                        提瓦特曾经的天空有三月。葬火之战后，唯有霜月得以保全。哥伦比娅自霜月中诞生。
+                        <br>月亮下诞生的哥伦比娅犹如一张白纸，渴望拥有家人和属于自己的家。
+                        <br><br>「母亲」远在虚假的高天之外。哥伦比娅只能闭着眼，在墙壁与墙壁之间摸索着前进。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row-reverse items-center gap-12 lore-item">
+                <div class="md:w-5/12 interactive-el group perspective-1000">
+                    <div class="tilt-wrap transition-transform duration-200 ease-out">
+                        <img src="./素材图/月神像.jpg" class="rounded-lg shadow-2xl  object-cover h-[700px] grayscale group-hover:grayscale-0 transition-all duration-700" onerror="this.src='https://via.placeholder.com/600x400?text=CG2'">
+                    </div>
+                </div>
+                <div class="md:w-1/2 text-left space-y-2">
+                    <div class="text-6xl text-white/5 font-cinzel select-none scroll-reveal leading-none">Faith</div>
+                    <h3 class="text-3xl font-bold text-moon-light text-holy font-noto scroll-reveal">无爱的神坛</h3>
+                    <p class="text-lg text-gray-300 font-cormorant leading-loose lore-text scroll-reveal pt-4">
+                        她接纳了“霜月之子”的信仰，却难以回应那份沉重的期望和日渐贪婪的索取。
+                        <br>她渐渐认为他人的所有付出只是利益交换，必须予以回报。
+                        <br><br>没有人真正将她视作家人，她变得对外界漠不关心。
+                        <br>她离开了霜月之子，走向了冰雪的风暴。
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-12 lore-item">
+                <div class="md:w-1/2 interactive-el group perspective-1000">
+                    <div class="tilt-wrap transition-transform duration-200 ease-out">
+                        <img src="./素材图/pv2.png" class="rounded-lg shadow-2xl w-full object-cover h-[400px] grayscale group-hover:grayscale-0 transition-all duration-700" onerror="this.src='https://via.placeholder.com/600x400?text=CG3'">
+                    </div>
+                </div>
+                <div class="md:w-1/2 text-left space-y-2">
+                    <div class="text-6xl text-white/5 font-cinzel select-none scroll-reveal leading-none">FATUI</div>
+                    <h3 class="text-3xl font-bold text-moon-light text-holy font-noto scroll-reveal">愚人众第三席</h3>
+                    <p class="text-lg text-gray-300 font-cormorant leading-loose lore-text scroll-reveal pt-4">
+                        她接受了冰之女皇的邀请，成为了“少女”。然而这里也不是她渴求的归宿。
+                        <br>困住她的迷宫是一个圆环，一座螺旋向上的高塔。哥伦比娅轻声哼唱记忆里的旋律，那是她与「母亲」唯一的联系。
+                        <br><br>她赤足走过霜月之坊和格鲁波夫堡，再度回到银月之庭，墙壁上依旧泛有她自己的回声。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row-reverse items-center gap-12 lore-item">
+                <div class="md:w-1/2 interactive-el group perspective-1000">
+                    <div class="tilt-wrap transition-transform duration-200 ease-out">
+                        <img src="./素材图/pv3.png" class="rounded-lg shadow-2xl w-full object-cover h-[400px] grayscale group-hover:grayscale-0 transition-all duration-700" onerror="this.src='https://via.placeholder.com/600x400?text=CG5'">
+                    </div>
+                </div>
+                <div class="md:w-1/2 text-right space-y-2">
+                    <div class="text-6xl text-white/5 font-cinzel select-none scroll-reveal leading-none">HOME</div>
+                    <h3 class="text-3xl font-bold text-moon-light text-holy font-noto scroll-reveal">月下归途</h3>
+                    <p class="text-lg text-gray-300 font-cormorant leading-loose lore-text scroll-reveal pt-4">
+                        与从前不同，如今的她在朋友们的帮助下找到了属于自己的名字。
+                        <br>她有所望，也有所求。她想回家，她已经来到塔顶之上，那个写有答案的月亮离她近在抬手之遥。这一次，她不再孤单。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="relative py-32 bg-moon-dark overflow-hidden z-10 section-mask">
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <img src="./素材图/银月之庭4.jpg" class="w-full h-full object-cover opacity-30 blur-bg bg-breathing">
+            <div class="absolute inset-0 bg-gradient-to-t from-moon-base via-moon-base/50 to-moon-base/30"></div>
+        </div>
+
+        <div class="text-center mb-16 scroll-reveal">
+            <div class="inline-flex items-center justify-center relative">
+                <img src="./图标/ui4.png" class="absolute -left-16 top-1/2 -translate-y-1/2 w-11 h-11 object-contain drop-shadow-glow  animate-float " style="margin-top: -1.25rem; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.899));">
+                <h2 class="text-4xl font-noto font-black text-white text-holy animate-float tracking-widest" style="text-shadow: 0 0 30px rgba(255,255,255,0.6);">
+                    银月之庭
+                </h2>
+            </div>
+            <div class="h-[1.2px] w-24 bg-gradient-to-r from-transparent via-moon-light to-transparent mx-auto mt-4"></div>	
+            <p class="text-xs font-cinzel text-moon-light tracking-[0.2em] mt-2">VISIONS OF THE DAMSELETTE</p>
+        </div>
+
+        <div class="relative w-full h-[600px] flex items-center justify-center perspective-1000" id="gallery-wrapper"></div>
+
+        <div class="flex justify-center gap-12 mt-4 relative z-20">
+            <button onclick="moveGallery(-1)" class="w-12 h-12 rounded-full border border-moon-light/30 text-moon-light hover:bg-moon-light/20 interactive-el"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="moveGallery(1)" class="w-12 h-12 rounded-full border border-moon-light/30 text-moon-light hover:bg-moon-light/20 interactive-el"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        
+        <div id="lightbox" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center p-8 cursor-zoom-out" onclick="this.classList.add('hidden'); this.classList.remove('flex')">
+            <img id="lightbox-img" class="max-w-full max-h-full rounded-lg shadow-glow">
+        </div>
+    </section>
+
+    <section id="oracle" class="relative py-32 bg-holy-gradient z-10 min-h-screen flex items-center section-mask">
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <img src="./素材图/伴月纪闻其一第三周1.jpg" class="w-full h-full object-cover opacity-40 bg-breathing">
+            <div class="absolute inset-0 bg-moon-base/70"></div>
+        </div>
+
+        <div class="container mx-auto px-6 max-w-5xl relative z-10">
+            <div class="text-center mb-12 scroll-reveal relative">
+                <div class="inline-flex items-center justify-center relative">
+                    <img src="./图标/ui4.png" class="absolute -left-16 top-1/2 -translate-y-1/2 w-11 h-11 object-contain drop-shadow-glow  animate-float " style="margin-top: -1.25rem; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.899));">
+                    <h2 class="text-4xl font-noto font-black text-white text-holy animate-float tracking-widest" style="text-shadow: 0 0 30px rgba(255,255,255,0.6);">
+                        夜昏且暗&emsp;且随月光
+                    </h2>
+                </div>
+                <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-moon-light to-transparent mx-auto mt-4"></div>
+                <h2 class="text-xs font-cinzel text-moon-light tracking-[0.2em] mt-2">DIVINE ORACLE</h2>
+            </div>
+
+            <div class="glass-panel rounded-3xl overflow-hidden flex flex-col md:flex-row min-h-[600px] shadow-holy-glow">
+                <div class="w-full md:w-1/3 bg-black/20 border-r border-white/5 p-8 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-2xl font-cinzel text-moon-light mb-8">THE ORACULUM</h3>
+                        <div class="space-y-4">
+                            <button onclick="window.switchOracleMode('chat')" id="btn-chat" class="w-full text-left p-4 rounded-xl bg-white/10 text-white font-bold border border-moon-light/50 transition-all interactive-el hover:shadow-glow hover:scale-105">
+                                <i class="fa-solid fa-comments mr-3"></i> 低语 (Whisper)
+                            </button>
+                            <button onclick="window.switchOracleMode('dream')" id="btn-dream" class="w-full text-left p-4 rounded-xl hover:bg-white/5 text-gray-400 border border-transparent transition-all interactive-el hover:shadow-glow hover:scale-105">
+                                <i class="fa-solid fa-cloud-moon mr-3"></i> 解梦 (Dream)
+                            </button>
+                        </div>
+                    </div>
+                    <div id="mode-desc" class="text-xs text-gray-400 font-cormorant italic mt-8 border-t border-white/10 pt-4">
+                        向她分享你的日常，或带上一份浆果煎肉……她会听见的。
+                    </div>
+                </div>
+
+                <div class="w-full md:w-2/3 p-8 flex flex-col relative bg-black/10">
+                    <div id="chat-container" class="flex-1 overflow-y-auto space-y-6 mb-6 pr-2 scroll-smooth">
+                        <div class="flex gap-4 animate-fade-in-up">
+                            <div class="w-14 h-14 rounded-full bg-moon-light/10 border border-moon-light flex items-center justify-center flex-shrink-0 animate-pulse">
+                                <img src="./图标/头像1.png" class="w-full h-full object-cover rounded-full">
+                            </div>
+                            <div class="glass-panel p-4 rounded-r-xl rounded-bl-xl text-gray-200 text-sm leading-relaxed max-w-[85%] font-cormorant shadow-glow">
+                                ……嗯？是你啊……<br>身边的花……好像变蓝了一些。要在这里陪我一会儿吗？
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <textarea id="user-input" rows="1" class="w-full bg-black/30 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-moon-light focus:outline-none resize-none overflow-hidden" placeholder="在此输入..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); window.handleSend();}"></textarea>
+                        <button onclick="window.handleSend()" id="send-btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-moon-light text-moon-base rounded-full flex items-center justify-center hover:scale-110 transition-transform interactive-el hover:shadow-glow">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="music" class="relative py-32 bg-moon-dark z-10 pb-48 section-mask">
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <img src="./素材图/伴月纪闻其二.png" 
+                 class="w-full h-full object-cover opacity-30 blur-[1px] bg-breathing">
+            <div class="absolute inset-0 bg-gradient-to-t from-moon-base via-moon-base/50 to-moon-base/30"></div>
+        </div>
+
+        <div class="text-center mb-12 scroll-reveal">
+            <div class="inline-flex items-center justify-center relative">
+                <img src="./图标/ui4.png" class="absolute -left-16 top-1/2 -translate-y-1/2 w-11 h-11 object-contain drop-shadow-glow  animate-float " style="margin-top: -1.25rem; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.899));">
+                <h2 class="text-4xl font-noto font-black text-white text-holy animate-float tracking-widest" style="text-shadow: 0 0 30px rgba(255,255,255,0.6);">
+                    万籁俱寂&emsp;唯闻君唱
+                </h2>
+            </div>
+            <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-moon-light to-transparent mx-auto mt-4"></div>
+            <h2 class="text-xs font-cinzel text-moon-light tracking-[0.3em] mt-2">Lullaby of the New Moon</h2>
+        </div>
+
+        <div class="container mx-auto px-6 max-w-6xl">
+            <div class="glass-panel rounded-[3rem] p-12 flex flex-col lg:flex-row gap-16 items-center overflow-hidden relative">
+                <div class="absolute inset-0 -z-10 opacity-30"><img id="blur-bg" src="./素材图/伴月纪闻其一.png" class="w-full h-full object-cover blur-3xl"></div>
+                <div class="relative w-80 h-80 flex-shrink-0">
+                    <div class="absolute inset-0 bg-black rounded-full shadow-2xl border-4 border-gray-800 spin spin-paused flex items-center justify-center" id="vinyl">
+                        <img id="music-cover" src="./素材图/伴月纪闻其二.png" class="w-48 h-48 rounded-full object-cover border-4 border-gray-900">
+                    </div>
+                    <div class="absolute -top-10 -right-10 origin-[20px_20px] transition-transform duration-700 rotate-[-30deg]" id="tonearm">
+                        <div class="w-12 h-12 bg-gray-400 rounded-full shadow-lg border-4 border-gray-600 flex items-center justify-center"><div class="w-4 h-4 bg-gray-800 rounded-full"></div></div>
+                        <div class="w-1 h-32 bg-gray-400 absolute top-6 left-6 rotate-12 origin-top"></div>
+                        <div class="w-8 h-12 bg-gray-300 absolute bottom-[-90px] left-[-10px] rounded shadow-md rotate-12"></div>
+                    </div>
+                </div>
+                <div class="flex-1 w-full text-center lg:text-left h-96 flex flex-col">
+                    <h2 class="text-4xl font-bold text-white mb-2" id="music-title">新月的摇篮曲</h2>
+                    <p class="text-moon-light font-cinzel text-lg mb-8" id="music-artist">Columbina</p>
+                    <div class="flex-1 space-y-2 pr-4 relative" id="lyrics-container"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="mini-player" class="fixed bottom-6 w-[90%] md:w-[600px] bg-moon-base/90 backdrop-blur-xl border border-moon-light/20 rounded-full shadow-2xl z-[9000] py-3 px-6 flex items-center justify-between visible">
+        <div class="flex items-center gap-4 w-1/3">
+            <img id="mini-cover" src="./素材图/伴月纪闻其一.png" class="w-12 h-12 rounded-full object-cover spin spin-paused border border-white/10">
+            <div class="hidden md:block overflow-hidden">
+                <div class="text-sm text-white font-bold truncate" id="mini-title">新月的摇篮曲</div>
+                <div class="text-xs text-gray-400 truncate">Columbina</div>
+            </div>
+        </div>
+        <div class="flex items-center justify-center gap-6 w-1/3">
+            <button onclick="toggleLoopMode()" id="loop-btn" class="text-gray-400 hover:text-white interactive-el"><i class="fa-solid fa-repeat"></i></button>
+            <button onclick="prevSong()" class="text-gray-400 hover:text-white interactive-el"><i class="fa-solid fa-backward-step"></i></button>
+            <button onclick="togglePlay()" class="w-10 h-10 rounded-full bg-moon-light text-moon-base flex items-center justify-center hover:scale-110 transition-transform interactive-el"><i class="fa-solid fa-play" id="mini-play-icon"></i></button>
+            <button onclick="nextSong()" class="text-gray-400 hover:text-white interactive-el"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+        <div class="w-1/3 pl-4 relative h-full flex flex-col justify-center">
+             <div class="flex justify-between text-[9px] text-moon-light/60 font-cinzel w-full absolute -top-3 left-4 pr-4">
+                <span id="current-time">00:00</span>
+                <span id="total-duration">00:00</span>
+            </div>
+            <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" class="w-full interactive-el mt-1">
+        </div>
+    </div>
+
+    <audio id="audio-source"></audio>
+
+    <script type="module">
+        // ---------------------------------------------------------
+        // PART 1: Gemini AI 核心逻辑 (V6: 文件读取 + 双模式)
+        // ---------------------------------------------------------
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // ⚠️【重要】请在此处填入你的 API Key
+        const API_KEY = "AIzaSyByW8-zEuFixCyzEeix5EDPLwTo5S1X908"; 
+
+        let genAI = null;
+        let model = null;
+        let chatSession = null;
+        let currentMode = 'chat'; // 'chat' | 'dream'
+        
+        // 预设缓存
+        const systemPrompts = {
+            chat: "",
+            dream: ""
+        };
+
+        // DOM 元素引用
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const btnChat = document.getElementById('btn-chat');
+        const btnDream = document.getElementById('btn-dream');
+        const modeDesc = document.getElementById('mode-desc');
+
+        // 初始化 AI
+        async function initAI() {
+            if(API_KEY === "YOUR_GEMINI_API_KEY") {
+                appendMessage('system', "请在代码中配置有效的 Gemini API Key 才能呼唤少女。");
+                return;
+            }
+
+            genAI = new GoogleGenerativeAI(API_KEY);
+            
+            // 读取本地预设文件
+            try {
+                await Promise.all([
+                    loadSystemPrompt('chat', './columbina_whisper.txt'),
+                    loadSystemPrompt('dream', './columbina_dream.txt')
+                ]);
+                console.log("System prompts loaded.");
+                startNewChat();
+            } catch (error) {
+                console.error("Failed to load prompts:", error);
+                appendMessage('system', "无法读取记忆文件。请确保 columbina_whisper.txt 和 columbina_dream.txt 在网站根目录下。");
+            }
+        }
+
+        async function loadSystemPrompt(type, url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            systemPrompts[type] = text;
+        }
+
+        function startNewChat() {
+            const prompt = systemPrompts[currentMode];
+            if (!prompt) return;
+
+            model = genAI.getGenerativeModel({ 
+                model: "gemini-2.5-flash",
+                systemInstruction: prompt
+            });
+
+            chatSession = model.startChat({ history: [] });
+        }
+
+        // 暴露给 window 的切换函数
+        window.switchOracleMode = function(mode) {
+            if (mode === currentMode) return;
+            currentMode = mode;
+
+            // UI 切换
+            if (mode === 'chat') {
+                btnChat.classList.add('bg-white/10', 'text-white', 'font-bold', 'border-moon-light/50');
+                btnChat.classList.remove('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+                
+                btnDream.classList.remove('bg-white/10', 'text-white', 'font-bold', 'border-moon-light/50');
+                btnDream.classList.add('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+                
+                modeDesc.innerText = "向她分享你的日常，或带上一份浆果煎肉……她会听见的。";
+                userInput.placeholder = "向少女低语...";
+            } else {
+                btnDream.classList.add('bg-white/10', 'text-white', 'font-bold', 'border-moon-light/50');
+                btnDream.classList.remove('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+                
+                btnChat.classList.remove('bg-white/10', 'text-white', 'font-bold', 'border-moon-light/50');
+                btnChat.classList.add('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+                
+                modeDesc.innerText = "将你的梦境、幻想或恐惧告诉她……透过虚假之天，她将为你解读。";
+                userInput.placeholder = "昨夜，我梦见了...";
+            }
+
+            // 清空并显示开场白
+            chatContainer.innerHTML = '';
+            
+            // 注意：appendMessage 函数我们也即将修改，它会自动根据 currentMode 判断用哪个头像
+            if (mode === 'chat') {
+                appendMessage('ai', "……嗯？是你啊……<br>身边的花……好像变蓝了一些。要在这里陪我一会儿吗？");
+            } else {
+                appendMessage('ai', "(身边的花海变成了深邃的幽蓝色，她静静地注视着你)<br>……梦境，是月亮在水中的倒影。<br>告诉我……你在梦里，看见了什么？");
+            }
+
+            startNewChat();
+        };
+
+        // 暴露给 window 的发送函数
+        window.handleSend = async function() {
+            const text = userInput.value.trim();
+            if (!text || !chatSession) return;
+
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            appendMessage('user', text);
+
+            const loadingId = appendLoading();
+
+            try {
+                const result = await chatSession.sendMessage(text);
+                const response = await result.response;
+                const markdownText = response.text();
+                
+                removeLoading(loadingId);
+                appendMessage('ai', markdownText);
+            } catch (error) {
+                removeLoading(loadingId);
+                console.error(error);
+                appendMessage('system', "（她似乎睡着了，没有回应……请检查网络或 API 配额）");
+            }
+        };
+
+        function appendMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `flex gap-4 animate-fade-in-up ${role === 'user' ? 'flex-row-reverse' : ''}`;
+            
+            // --- 修改开始：动态判断头像路径 ---
+            let avatarSrc = "";
+            if (role === 'user') {
+                // 用户头像：固定为 头像3.png
+                avatarSrc = "./图标/头像3.png"; 
+            } else {
+                // AI头像：根据当前模式判断
+                avatarSrc = currentMode === 'chat' ? "./图标/头像1.png" : "./图标/头像2.png";
+            }
+
+            // 修改样式：w-10 h-10 -> w-14 h-14，保留 animate-pulse
+            const avatar = `<div class="w-14 h-14 rounded-full bg-moon-light/10 border border-moon-light flex items-center justify-center flex-shrink-0 animate-pulse overflow-hidden"><img src="${avatarSrc}" class="w-full h-full object-cover"></div>`;
+            // --- 修改结束 ---
+
+            const styleClass = role === 'user' 
+                ? 'bg-white/10 text-white rounded-l-xl rounded-br-xl' 
+                : role === 'system' ? 'text-red-400 italic text-center w-full'
+                : 'glass-panel text-moon-light rounded-r-xl rounded-bl-xl font-cormorant italic shadow-glow';
+
+            const contentHtml = role === 'system' ? text : marked.parse(text);
+
+            if (role === 'system') {
+                div.innerHTML = `<div class="${styleClass}">${text}</div>`;
+            } else {
+                div.innerHTML = `
+                    ${avatar}
+                    <div class="${styleClass} p-4 text-sm leading-relaxed max-w-[85%]">
+                        ${contentHtml}
+                    </div>
+                `;
+            }
+            
+            chatContainer.appendChild(div);
+            scrollToBottom();
+        }
+
+        function appendLoading() {
+            const id = 'loading-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = `flex gap-4 animate-pulse`; // 容器整体呼吸
+            
+            // --- 修改开始：判断加载时的头像 ---
+            const avatarSrc = currentMode === 'chat' ? "./图标/头像1.png" : "./图标/头像2.png";
+            
+            div.innerHTML = `
+                <div class="w-14 h-14 rounded-full bg-moon-light/10 border border-moon-light flex items-center justify-center flex-shrink-0 animate-pulse overflow-hidden">
+                    <img src="${avatarSrc}" class="w-full h-full object-cover">
+                </div>
+                <div class="glass-panel p-3 rounded-r-xl rounded-bl-xl text-gray-400 text-xs flex items-center">
+                    少女正在聆听...
+                </div>
+            `;
+            // --- 修改结束 ---
+
+            chatContainer.appendChild(div);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeLoading(id) {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // 启动 AI 模块
+        initAI();
+
+
+        // ---------------------------------------------------------
+        // PART 2: 原有网页逻辑 (音乐、画廊、动画) - 保持不变
+        // ---------------------------------------------------------
+        
+        // 全局变量区
+        const song1Info = [
+            {t: 0, text: "作词 Lyricist : 项柳 Hsiang Liu"},
+            {t: 0.85, text: "作曲 Composer : 李洋 Yang Lee (HOYO-MiX)"},
+            {t: 1.71, text: "编曲 Arranger : 李洋 Yang Lee (HOYO-MiX)"},
+            {t: 2.56, text: "制谱 Music Copyist : 殷照晴 Judy Yin (HOYO-MiX)"},
+            {t: 3.42, text: "指挥 Conductor : Robert Ziegler"},
+            {t: 4.28, text: "乐队 Orchestra : 伦敦交响乐团 London Symphony Orchestra"},
+            {t: 5.13, text: "人声 Voice : 亦乐 Elim"},
+            {t: 5.99, text: "尼古赫帕琴 Nyckelharpa : Vicki Swan"},
+            {t: 6.84, text: "绞弦琴 Hurdy-Gurdy : Anna Tam"},
+            {t: 7.70, text: "录音棚: Abbey Road Studios / Air-Edel / 52Hz"},
+            {t: 8.56, text: "录音师: Lewis Jones / Olly Thompson / Richie Acasuso / 黄巍"},
+            {t: 9.41, text: "混音师 Mixing Engineer : 黄巍 Zach Huang"},
+            {t: 10.27, text: "母带制作 Mastering Engineer : 鸦雀有声 Anzol"},
+            {t: 11.12, text: "出品 Produced by : HOYO-MiX"}
+        ];
+
+        const songs = [
+            {
+                title: "新月的摇篮曲 (其二)",
+                artist: "HOYO-MiX",
+                src: "./音乐/新月的摇篮曲（其二）：宵晖下的笑颜.mp3",
+                cover: "./素材图/伴月纪闻其二.png",
+                lyrics: [
+                    {t: 0.00, text: "作曲 Composer : 李洋 Yang Lee (HOYO-MiX)"},
+                    {t: 0.41, text: "编曲 Arranger : 李洋 Yang Lee (HOYO-MiX)"},
+                    {t: 0.83, text: "制谱 Music Copyist : 殷照晴 Judy Yin (HOYO-MiX)"},
+                    {t: 1.24, text: "指挥 Conductor : Robert Ziegler"},
+                    {t: 1.66, text: "乐队 Orchestra : 伦敦交响乐团 London Symphony Orchestra"},
+                    {t: 2.08, text: "人声 Voice : 亦乐 Elim"},
+                    {t: 2.49, text: "哨笛 Tin Whistle : Philippe Barnes"},
+                    {t: 2.91, text: "录音棚 Recording Studio : Abbey Road Studios/AIR Studios/Air-Edel Recording Studios/52Hz Studio"},
+                    {t: 3.32, text: "录音师 Recording Engineer : Lewis Jones/Olly Thompson/Richie Acasuso/黄巍 Zach Huang"},
+                    {t: 3.74, text: "混音师 Mixing Engineer : 黄巍 Zach Huang"},
+                    {t: 4.16, text: "母带制作 Mastering Engineer : 鸦雀有声 Anzol"},
+                    {t: 4.57, text: "出品 Produced by : HOYO-MiX"},
+                    {t: 5.00, text: "纯音乐，请欣赏"}
+                ]
+            },
+            {
+                title: "新月的摇篮曲 (其一)",
+                artist: "Columbina",
+                src: "./音乐/新月的摇篮曲（其一）：伴月同眠.mp3",
+                cover: "./素材图/伴月纪闻其一.png",
+                lyrics: [
+                    ...song1Info,
+                    {t: 11.99, text: "Dormi cara columbula (睡吧，睡吧，我的小鸽子)"},
+                    {t: 17.77, text: "O columbula mea (睡吧，我亲爱的小鸽子呀)"},
+                    {t: 23.97, text: "Splendeat fenestra, adsint somnia flora"},
+                    {t: 28.00, text: "(愿繁花与美梦盛开在你窗边)"},
+                    {t: 34.11, text: "O cara filia lunae (月亮的孩子呀，我的小鸽子)"},
+                    {t: 40.03, text: "Neve plumam pulvis foedet tuam (即便尘埃玷染你洁白的羽毛)"},
+                    {t: 45.78, text: "Nec iam complexum alma (即便你不再躺在温暖的怀抱)"},
+                    {t: 51.66, text: "Capias bona somnias a luna (也愿你在梦中与月相伴而眠)"},
+                    {t: 57.86, text: "---"},
+                    {t: 67.79, text: "Dormi cara columbula (睡吧，睡吧，我的小鸽子)"},
+                    {t: 73.44, text: "O columbula mea (睡吧，我亲爱的小鸽子呀)"},
+                    {t: 79.35, text: "Splendeat fenestra, adsint somnia flora (愿繁花与美梦盛开在你窗边)"},
+                    {t: 89.54, text: "O cara filia lunae (月亮的孩子呀，我的小鸽子)"},
+                    {t: 95.30, text: "Neve plumam pulvis foedet tuam (即便尘埃玷染你洁白的羽毛)"},
+                    {t: 101.08, text: "Nec iam complexum alma (即便你不再躺在温暖的怀抱)"},
+                    {t: 107.07, text: "Capias bona somnias a luna (也愿你在梦中与月相伴而眠)"},
+                    {t: 113.38, text: "---"},
+                    {t: 116.04, text: "Capias bona somnias a luna (也愿你在梦中与月相伴而眠)"},
+                    {t: 124.54, text: "..."}
+                ]
+            },
+            {
+                title: "新月的摇篮曲 (其三)",
+                artist: "HOYO-MiX",
+                src: "./音乐/新月的摇篮曲（其三）：眉间落英.mp3",
+                cover: "./素材图/伴月纪闻其一第三周1.png",
+                lyrics: [
+                    {t: 0.00, text: "作曲 Composer : 李洋 Yang Lee (HOYO-MiX)"},
+                    {t: 0.35, text: "编曲 Arranger : 李洋 Yang Lee (HOYO-MiX)"},
+                    {t: 0.71, text: "制谱 Music Copyist : 周千朔 Qianshuo Zhou (HOYO-MiX)"},
+                    {t: 1.07, text: "人声 Voice : 亦乐 Elim"},
+                    {t: 1.42, text: "爱尔兰长笛 Irish Flute : Philippe Barnes"},
+                    {t: 1.78, text: "第一小提琴 First Violin : 张琴 Qin Zhang"},
+                    {t: 2.14, text: "第二小提琴 Second Violin : 王大毛 Damao Wang"},
+                    {t: 2.49, text: "中提琴 Viola : 何辉 Hui He"},
+                    {t: 2.85, text: "大提琴 Cello : 孙艺 Yi Sun"},
+                    {t: 3.21, text: "录音棚 Recording Studio : Air-Edel Recording Studios/52Hz Studio/九紫天诚录音棚 SKY FIRE STUDIO"},
+                    {t: 3.57, text: "录音师 Recording Engineer : Olly Thompson/Richie Acasuso/黄巍 Zach Huang/董方昱 Fangyu Dong"},
+                    {t: 3.92, text: "混音师 Mixing Engineer : 黄巍 Zach Huang"},
+                    {t: 4.28, text: "母带制作 Mastering Engineer : 鸦雀有声 Anzol"},
+                    {t: 4.64, text: "出品 Produced by : HOYO-MiX"},
+                    {t: 5.00, text: "纯音乐，请欣赏"}
+                ]
+            }
+        ];
+        
+        let currentIdx = 0;
+        let isPlaying = false;
+        let loopMode = 0; 
+
+        // 1. 光标逻辑
+        const cursor = document.getElementById('custom-cursor');
+        const cursorImg = document.getElementById('cursor-img');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            if(Math.random() > 0.2) { 
+                const trail = document.createElement('div');
+                trail.className = 'cursor-trail-star';
+                if(Math.random() > 0.5) trail.classList.add('trail-pink'); 
+                trail.innerHTML = Math.random() > 0.5 ? '✦' : '·'; 
+                trail.style.left = e.clientX + 'px';
+                trail.style.top = e.clientY + 'px';
+                const s = Math.random() * 1.5 + 1;
+                trail.style.transform = `scale(${s})`;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 1500);
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            for(let i=0; i<2; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'ripple-ring';
+                ring.style.left = e.clientX + 'px';
+                ring.style.top = e.clientY + 'px';
+                ring.style.animationDelay = i * 0.5 + 's';
+                document.body.appendChild(ring);
+                setTimeout(() => ring.remove(), 2000);
+            }
+            for(let i=0; i<6; i++) {
+                const f = document.createElement('div');
+                f.className = 'feather-particle';
+                f.style.left = e.clientX + 'px';
+                f.style.top = e.clientY + 'px';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 70 + 30; 
+                const rotation = Math.random() * 360;
+                f.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                f.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                f.style.setProperty('--rot', rotation + 'deg');
+                document.body.appendChild(f);
+                setTimeout(() => f.remove(), 1200);
+            }
+            cursor.classList.add('clicking');
+            setTimeout(() => cursor.classList.remove('clicking'), 200);
+        });
+
+        document.addEventListener('mouseover', (e) => {
+            if(e.target.closest('.interactive-el, a, button, input[type=range], .lyric-item')) {
+                cursor.classList.add('active');
+                cursorImg.src = './素材图/Q版2.png';
+            }
+        });
+        document.addEventListener('mouseout', (e) => {
+            if(e.target.closest('.interactive-el, a, button, input[type=range], .lyric-item')) {
+                cursor.classList.remove('active');
+                cursorImg.src = './素材图/Q版1.png';
+            }
+        });
+
+        // 2. 粒子系统
+        function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            const particles = [];
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for(let i=0; i<60; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 15 + 5,
+                    speedY: Math.random() * 0.5 + 0.2,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    angle: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 0.02,
+                    opacity: Math.random() * 0.5 + 0.1
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX + Math.sin(p.y * 0.01) * 0.2;
+                    p.angle += p.spin;
+                    
+                    if(p.y > height + 20) {
+                        p.y = -20;
+                        p.x = Math.random() * width;
+                    }
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
+                    ctx.globalAlpha = p.opacity;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, -p.size);
+                    ctx.quadraticCurveTo(p.size/3, 0, 0, p.size);
+                    ctx.quadraticCurveTo(-p.size/3, 0, 0, -p.size);
+                    const g = ctx.createLinearGradient(0, -p.size, 0, p.size);
+                    g.addColorStop(0, "rgba(255,255,255,0.9)");
+                    g.addColorStop(1, "rgba(255,255,255,0)");
+                    ctx.fillStyle = g;
+                    ctx.fill();
+                    
+                    ctx.restore();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // 3. 播放器逻辑
+        const audio = document.getElementById('audio-source');
+        const vinyl = document.getElementById('vinyl');
+        const tonearm = document.getElementById('tonearm');
+        const lyricsContainer = document.getElementById('lyrics-container');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalDurationEl = document.getElementById('total-duration');
+
+        window.seekTo = function(time) {
+            audio.currentTime = time;
+            if(!isPlaying) window.togglePlay();
+        };
+
+        window.loadSong = function(index) {
+            const s = songs[index];
+            document.getElementById('music-title').innerText = s.title;
+            document.getElementById('music-artist').innerText = s.artist;
+            document.getElementById('mini-title').innerText = s.title;
+            document.getElementById('music-cover').src = s.cover;
+            document.getElementById('blur-bg').src = s.cover;
+            document.getElementById('mini-cover').src = s.cover;
+            audio.src = s.src;
+            
+            lyricsContainer.innerHTML = '<div class="h-[40%]"></div>'; 
+            let htmlStr = '';
+            s.lyrics.forEach(l => {
+                htmlStr += `<p class="lyric-item text-lg md:text-xl font-cormorant" data-time="${l.t}" onclick="seekTo(${l.t})">${l.text}</p>`;
+            });
+            lyricsContainer.innerHTML += htmlStr;
+            lyricsContainer.innerHTML += '<div class="h-[50%]"></div>';
+            
+            progressBar.value = 0;
+            progressBar.style.backgroundSize = '0% 100%';
+        }
+
+        window.togglePlay = function() {
+            if(isPlaying) {
+                audio.pause();
+                vinyl.classList.add('spin-paused');
+                document.getElementById('mini-cover').classList.add('spin-paused');
+                tonearm.style.transform = 'rotate(-30deg)';
+                document.getElementById('mini-play-icon').className = 'fa-solid fa-play';
+            } else {
+                audio.play();
+                vinyl.classList.remove('spin-paused');
+                document.getElementById('mini-cover').classList.remove('spin-paused');
+                document.getElementById('mini-cover').classList.add('spin');
+                tonearm.style.transform = 'rotate(0deg)';
+                document.getElementById('mini-play-icon').className = 'fa-solid fa-pause';
+            }
+            isPlaying = !isPlaying;
+        }
+
+        window.toggleLoopMode = function() {
+            loopMode = (loopMode + 1) % 3;
+            const btn = document.getElementById('loop-btn');
+            
+            if (loopMode === 0) {
+                btn.innerHTML = '<i class="fa-solid fa-repeat"></i>'; 
+                btn.title = "列表循环";
+            } else if (loopMode === 1) {
+                btn.innerHTML = '<div class="loop-icon-container"><i class="fa-solid fa-repeat text-sm"></i><span class="loop-num-badge">1</span></div>';
+                btn.title = "单曲循环";
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-shuffle"></i>'; 
+                btn.title = "随机播放";
+            }
+        }
+
+        window.nextSong = function() {
+            if(loopMode === 2) {
+                 let next = Math.floor(Math.random() * songs.length);
+                 if(next === currentIdx) next = (next + 1) % songs.length;
+                 currentIdx = next;
+            } else {
+                 currentIdx = (currentIdx + 1) % songs.length;
+            }
+            loadSong(currentIdx);
+            if(isPlaying) audio.play();
+        }
+
+        window.prevSong = function() {
+            currentIdx = (currentIdx - 1 + songs.length) % songs.length;
+            loadSong(currentIdx);
+            if(isPlaying) audio.play();
+        }
+
+        audio.onended = () => {
+            if(loopMode === 1) { audio.currentTime = 0; audio.play(); }
+            else { nextSong(); }
+        };
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            const t = audio.currentTime;
+            const d = audio.duration || 0;
+            
+            currentTimeEl.innerText = formatTime(t);
+            totalDurationEl.innerText = formatTime(d);
+            
+            if(d > 0) {
+                const pct = (t / d) * 100;
+                progressBar.value = pct;
+                progressBar.style.backgroundSize = `${pct}% 100%`;
+            }
+            
+            const lyrics = document.querySelectorAll('.lyric-item');
+            let activeEl = null;
+            lyrics.forEach((el, i) => {
+                const time = parseFloat(el.getAttribute('data-time'));
+                const nextTime = lyrics[i+1] ? parseFloat(lyrics[i+1].getAttribute('data-time')) : Infinity;
+                if(t >= time && t < nextTime) {
+                    el.classList.add('lyric-active');
+                    activeEl = el;
+                } else {
+                    el.classList.remove('lyric-active');
+                }
+            });
+            
+            if(activeEl) {
+                const containerHalfHeight = lyricsContainer.clientHeight / 2;
+                const elCenter = activeEl.offsetTop + (activeEl.clientHeight / 2);
+                lyricsContainer.scrollTo({
+                    top: elCenter - containerHalfHeight,
+                    behavior: 'smooth'
+                });
+            }
+        });
+
+        progressBar.addEventListener('input', (e) => {
+            const pct = e.target.value;
+            const d = audio.duration || 0;
+            audio.currentTime = (pct / 100) * d;
+            e.target.style.backgroundSize = `${pct}% 100%`;
+        });
+        
+        window.toggleMute = function() {
+            audio.muted = !audio.muted;
+            document.querySelector('#mute-btn i').className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        }
+
+        // 4. 3D 画廊
+        const galleryImgs = [
+            "./素材图/伴月纪闻其一.png",
+            "./素材图/伴月纪闻其二.png",
+            "./素材图/伴月纪闻其一第三周1.jpg",
+            "./素材图/伴月纪闻其一第三周2.jpg", 
+            "./素材图/伴月纪闻其一第三周3.jpg",
+            "./素材图/伴月纪闻其二第二周1.jpg"
+        ];
+
+        const galleryWrapper = document.getElementById('gallery-wrapper');
+        let galleryIdx = 0;
+
+        galleryImgs.forEach((src, i) => {
+            const div = document.createElement('div');
+            div.className = "gallery-card-3d interactive-el"; 
+            const randomDelay = Math.random() * -5;
+            const randomDuration = 4 + Math.random() * 3;
+            
+            div.innerHTML = `
+                <div class="anim-float-wrapper" style="animation-delay: ${randomDelay}s; animation-duration: ${randomDuration}s;">
+                    <div class="anim-flash-wrapper" style="animation-delay: ${randomDelay * 0.5}s;">
+                        <img src="${src}" class="img-cover" onerror="this.src='https://via.placeholder.com/320x480?text=Image'">
+                    </div>
+                </div>
+            `;
+            
+            div.onclick = () => {
+                if(i === galleryIdx) {
+                    document.getElementById('lightbox').classList.remove('hidden');
+                    document.getElementById('lightbox').classList.add('flex');
+                    document.getElementById('lightbox-img').src = src;
+                } else {
+                    galleryIdx = i;
+                    renderGallery();
+                }
+            };
+            galleryWrapper.appendChild(div);
+        });
+
+        const cards = galleryWrapper.children;
+        function renderGallery() {
+            for(let i=0; i<cards.length; i++) {
+                const offset = i - galleryIdx;
+                const absOffset = Math.abs(offset);
+                
+                let transform = `translateX(${offset * 180}px) scale(${1 - absOffset*0.15}) perspective(1000px) rotateY(${offset * -15}deg)`;
+                let zIndex = 100 - absOffset;
+                let opacity = 1 - absOffset*0.3;
+
+                if(absOffset > 2) opacity = 0; 
+                
+                const flashWrap = cards[i].querySelector('.anim-flash-wrapper');
+                if(offset === 0) {
+                    cards[i].style.filter = "brightness(1.1)"; 
+                } else {
+                    cards[i].style.filter = "brightness(0.5)";
+                }
+
+                cards[i].style.transform = transform;
+                cards[i].style.zIndex = zIndex;
+                cards[i].style.opacity = opacity;
+            }
+        }
+        renderGallery();
+
+        window.moveGallery = function(dir) {
+            const newIdx = galleryIdx + dir;
+            if(newIdx >= 0 && newIdx < cards.length) { galleryIdx = newIdx; renderGallery(); }
+        }
+
+        // 5. Lore Tilt
+        document.querySelectorAll('.lore-item').forEach(item => {
+            const tiltWrap = item.querySelector('.tilt-wrap');
+            if(!tiltWrap) return;
+            
+            item.addEventListener('mousemove', (e) => {
+                const rect = item.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                const rx = -(y - cy) / 100;
+                const ry = (x - cx) / 100;
+                tiltWrap.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.01)`;
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                tiltWrap.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        window.scrollToId = function(id) { document.getElementById(id).scrollIntoView({behavior: 'smooth'}); }
+
+        window.onload = function() {
+            loadSong(0);
+            initParticles();
+            
+            const tl = gsap.timeline();
+            tl.to(".hero-anim", { opacity: 1, y: 0, duration: 1.5, stagger: 0.3, ease: "power2.out" })
+              .to(".hero-img", { opacity: 1, x: 0, duration: 2, ease: "power2.out" }, "-=1");
+            
+            const tryPlay = () => {
+                const p = audio.play();
+                if(p !== undefined) {
+                    p.then(_ => {
+                         isPlaying = true;
+                         vinyl.classList.remove('spin-paused');
+                         document.getElementById('mini-cover').classList.add('spin');
+                         document.getElementById('mini-play-icon').className = 'fa-solid fa-pause';
+                         tonearm.style.transform = 'rotate(0deg)';
+                    }).catch(e => console.log("Autoplay blocked - user interaction needed"));
+                }
+            };
+            setTimeout(tryPlay, 800);
+            document.body.addEventListener('click', function unlockAudio() {
+                if(!isPlaying) tryPlay();
+                document.body.removeEventListener('click', unlockAudio);
+            }, {once:true});
+            
+            gsap.registerPlugin(ScrollTrigger);
+            
+            gsap.utils.toArray('.scroll-reveal, .lore-text').forEach(el => {
+                gsap.fromTo(el, 
+                    { opacity: 0, y: 30 },
+                    { opacity: 1, y: 0, duration: 1.5, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play reverse play reverse" } }
+                );
+            });
+
+            ScrollTrigger.batch(".profile-card-anim", {
+                start: "top 85%",
+                onEnter: batch => gsap.to(batch, {opacity: 1, y: 0, stagger: 0.2, duration: 2, ease: "power2.out"}),
+                onLeaveBack: batch => gsap.to(batch, {opacity: 0, y: 30, duration: 0.5})
+            });
+        };
+    </script>
+</body>
+</html>
